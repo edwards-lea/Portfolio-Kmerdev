@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio — Développeur Web & IA | Kmer Watches Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root {
+  --bg: #050508;
+  --bg2: #0A0A0F;
+  --bg3: #111118;
+  --gold: #D4A843;
+  --gold2: #F0C060;
+  --cyan: #00E5FF;
+  --green: #1B6B3A;
+  --green2: #2EA55A;
+  --white: #F0EDE8;
+  --grey: #666680;
+  --border: rgba(212,168,67,0.15);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* CUSTOM CURSOR */
+.cursor {
+  width: 12px; height: 12px;
+  background: var(--gold);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s ease, width 0.2s, height 0.2s, background 0.2s;
+  mix-blend-mode: difference;
+}
+.cursor-ring {
+  width: 40px; height: 40px;
+  border: 1px solid rgba(212,168,67,0.5);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  transition: transform 0.15s ease, width 0.3s, height 0.3s;
+}
+body:hover .cursor { opacity: 1; }
+
+/* NOISE OVERLAY */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.4;
+}
+
+/* NAV */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  padding: 20px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(5,5,8,0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 3px;
+  color: var(--gold);
+}
+.nav-links { display: flex; gap: 32px; list-style: none; }
+.nav-links a {
+  color: var(--grey);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--gold); }
+.nav-cta {
+  background: var(--gold);
+  color: var(--bg);
+  padding: 10px 24px;
+  border-radius: 2px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s;
+}
+.nav-cta:hover { background: var(--gold2); transform: translateY(-1px); }
+
+/* HERO */
+.hero {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  padding: 100px 40px 40px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 50%;
+  height: 100%;
+  background: radial-gradient(ellipse at 70% 50%, rgba(212,168,67,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-text { position: relative; z-index: 2; }
+
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--cyan);
+  letter-spacing: 2px;
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: slideUp 0.8s 0.2s forwards;
+}
+.hero-tag::before {
+  content: '';
+  width: 24px; height: 1px;
+  background: var(--cyan);
+}
+
+.hero h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(60px, 8vw, 110px);
+  line-height: 0.9;
+  letter-spacing: 2px;
+  opacity: 0;
+  animation: slideUp 0.8s 0.4s forwards;
+}
+.hero h1 .gold { color: var(--gold); }
+.hero h1 .outline {
+  -webkit-text-stroke: 1px rgba(240,237,232,0.3);
+  color: transparent;
+}
+
+.hero-sub {
+  margin-top: 24px;
+  font-size: 16px;
+  color: rgba(240,237,232,0.6);
+  line-height: 1.7;
+  max-width: 440px;
+  opacity: 0;
+  animation: slideUp 0.8s 0.6s forwards;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 16px;
+  margin-top: 40px;
+  opacity: 0;
+  animation: slideUp 0.8s 0.8s forwards;
+}
+.btn-primary {
+  background: var(--gold);
+  color: var(--bg);
+  padding: 16px 36px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 2px;
+  text-decoration: none;
+}
+.btn-primary:hover { background: var(--gold2); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(212,168,67,0.3); }
+.btn-secondary {
+  background: transparent;
+  color: var(--white);
+  padding: 16px 36px;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border: 1px solid rgba(240,237,232,0.2);
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 2px;
+  text-decoration: none;
+}
+.btn-secondary:hover { border-color: var(--gold); color: var(--gold); }
+
+.hero-stats {
+  display: flex;
+  gap: 40px;
+  margin-top: 60px;
+  padding-top: 40px;
+  border-top: 1px solid var(--border);
+  opacity: 0;
+  animation: slideUp 0.8s 1s forwards;
+}
+.stat-item { }
+.stat-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 42px;
+  color: var(--gold);
+  line-height: 1;
+}
+.stat-label {
+  font-size: 12px;
+  color: var(--grey);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* 3D CANVAS */
+.hero-3d {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  animation: fadeIn 1.2s 0.5s forwards;
+}
+#watch-canvas {
+  width: 100%;
+  max-width: 500px;
+  height: 500px;
+  border-radius: 50%;
+}
+
+/* FLOATING BADGES */
+.badge-float {
+  position: absolute;
+  background: rgba(10,10,15,0.9);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  backdrop-filter: blur(10px);
+  animation: float 3s ease-in-out infinite;
+}
+.badge-float:nth-child(2) { animation-delay: -1s; top: 15%; right: 5%; }
+.badge-float:nth-child(3) { animation-delay: -2s; bottom: 20%; left: 5%; }
+.badge-title { font-size: 11px; color: var(--grey); letter-spacing: 1px; text-transform: uppercase; }
+.badge-value { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--gold); margin-top: 2px; font-weight: 500; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+/* MARQUEE */
+.marquee-wrap {
+  background: var(--gold);
+  padding: 14px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+}
+.marquee-track {
+  display: inline-flex;
+  animation: marquee 20s linear infinite;
+}
+.marquee-item {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 3px;
+  color: var(--bg);
+  padding: 0 40px;
+}
+.marquee-dot {
+  color: rgba(5,5,8,0.4);
+  padding: 0 10px;
+}
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* SECTIONS */
+section {
+  padding: 100px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.section-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--cyan);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.section-tag::before {
+  content: '';
+  width: 32px; height: 1px;
+  background: var(--cyan);
+}
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(40px, 5vw, 72px);
+  line-height: 0.95;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+.section-title .gold { color: var(--gold); }
+
+/* SKILLS */
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 60px;
+}
+.skill-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+  opacity: 0;
+  transform: translateY(30px);
+}
+.skill-card.visible {
+  animation: slideUp 0.6s forwards;
+}
+.skill-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(212,168,67,0.4);
+  box-shadow: 0 20px 60px rgba(212,168,67,0.08);
+}
+.skill-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold), var(--green2));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s;
+}
+.skill-card:hover::before { transform: scaleX(1); }
+.skill-icon { font-size: 32px; margin-bottom: 16px; display: block; }
+.skill-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.skill-desc { font-size: 13.5px; color: rgba(240,237,232,0.6); line-height: 1.6; }
+.skill-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+.skill-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(212,168,67,0.08);
+  border: 1px solid rgba(212,168,67,0.2);
+  color: var(--gold);
+}
+
+/* PROJECTS */
+.projects-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 60px;
+}
+@media(max-width:768px){ .projects-grid{ grid-template-columns:1fr; } }
+
+.project-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+  opacity: 0;
+  transform: translateY(30px);
+  cursor: pointer;
+}
+.project-card.visible { animation: slideUp 0.7s forwards; }
+.project-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+}
+.project-thumb {
+  height: 200px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.project-thumb canvas { width: 100%; height: 100%; }
+.project-thumb-bg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 80px;
+}
+.p1 .project-thumb-bg { background: linear-gradient(135deg, #0a1628, #001a33); }
+.p2 .project-thumb-bg { background: linear-gradient(135deg, #0a1a0e, #051a0a); }
+.p3 .project-thumb-bg { background: linear-gradient(135deg, #1a0a0e, #0d0005); }
+.p4 .project-thumb-bg { background: linear-gradient(135deg, #0e0a1a, #05000d); }
+
+.project-info { padding: 24px; }
+.project-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.project-desc { font-size: 13.5px; color: rgba(240,237,232,0.6); line-height: 1.6; }
+.project-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.project-tech { display: flex; gap: 6px; flex-wrap: wrap; }
+.project-link {
+  width: 36px; height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s;
+  background: rgba(212,168,67,0.05);
+}
+.project-link:hover { background: var(--gold); color: var(--bg); border-color: var(--gold); }
+
+/* CHATBOT DEMO SECTION */
+.chatbot-section {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 100px 40px;
+}
+.chatbot-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: start;
+}
+@media(max-width:900px){ .chatbot-inner{ grid-template-columns:1fr; } }
+
+.chatbot-info { }
+.chatbot-info .section-title { margin-bottom: 24px; }
+.chatbot-info p {
+  font-size: 15px;
+  color: rgba(240,237,232,0.65);
+  line-height: 1.8;
+  margin-bottom: 16px;
+}
+.feature-list { list-style: none; margin: 24px 0; }
+.feature-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  font-size: 14px;
+  color: rgba(240,237,232,0.8);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.feature-list li::before {
+  content: '✦';
+  color: var(--gold);
+  font-size: 10px;
+}
+
+/* CHAT UI */
+.chat-widget {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,168,67,0.05);
+  position: sticky;
+  top: 100px;
+}
+.chat-header {
+  background: linear-gradient(135deg, var(--green) 0%, #0d3d1f 100%);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.chat-avatar {
+  width: 44px; height: 44px;
+  background: rgba(212,168,67,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  border: 2px solid rgba(212,168,67,0.4);
+}
+.chat-header-info .chat-name {
+  font-weight: 700;
+  font-size: 15px;
+}
+.chat-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(240,237,232,0.7);
+  margin-top: 2px;
+}
+.chat-status::before {
+  content: '';
+  width: 7px; height: 7px;
+  background: #4ade80;
+  border-radius: 50%;
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink {
+  0%,100%{opacity:1} 50%{opacity:0.4}
+}
+
+.chat-messages {
+  height: 360px;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+}
+.chat-messages::-webkit-scrollbar { width: 3px; }
+.chat-messages::-webkit-scrollbar-thumb { background: rgba(212,168,67,0.3); border-radius: 2px; }
+
+.msg {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  animation: msgIn 0.3s ease;
+}
+@keyframes msgIn {
+  from { opacity:0; transform:translateY(8px) scale(0.95); }
+  to { opacity:1; transform:translateY(0) scale(1); }
+}
+.msg-bot {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-bottom-left-radius: 4px;
+  align-self: flex-start;
+  color: rgba(240,237,232,0.9);
+}
+.msg-user {
+  background: linear-gradient(135deg, var(--green), #0d3d1f);
+  border-bottom-right-radius: 4px;
+  align-self: flex-end;
+  color: white;
+}
+.msg-time {
+  font-size: 10px;
+  color: var(--grey);
+  margin-top: 4px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 14px 18px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  border-bottom-left-radius: 4px;
+  align-self: flex-start;
+  align-items: center;
+}
+.typing-dot {
+  width: 6px; height: 6px;
+  background: var(--gold);
+  border-radius: 50%;
+  animation: typing 1.4s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing {
+  0%,100%{transform:translateY(0);opacity:0.4}
+  50%{transform:translateY(-5px);opacity:1}
+}
+
+.quick-replies {
+  display: flex;
+  gap: 8px;
+  padding: 0 20px 16px;
+  flex-wrap: wrap;
+}
+.quick-btn {
+  background: rgba(212,168,67,0.08);
+  border: 1px solid rgba(212,168,67,0.25);
+  color: var(--gold);
+  font-size: 11.5px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Outfit', sans-serif;
+}
+.quick-btn:hover { background: rgba(212,168,67,0.2); transform: translateY(-2px); }
+
+.chat-input-wrap {
+  display: flex;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  background: rgba(5,5,8,0.5);
+}
+.chat-input {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13.5px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.chat-input::placeholder { color: var(--grey); }
+.chat-input:focus { border-color: rgba(212,168,67,0.4); }
+.chat-send {
+  width: 46px; height: 46px;
+  background: var(--gold);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.chat-send:hover { background: var(--gold2); transform: scale(1.05); }
+.chat-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* PROCESS */
+.process-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  margin-top: 60px;
+}
+@media(max-width:768px){ .process-steps{ grid-template-columns: 1fr 1fr; } }
+
+.process-step {
+  background: var(--bg3);
+  padding: 32px 24px;
+  position: relative;
+  border: 1px solid var(--border);
+  transition: background 0.3s;
+  opacity: 0;
+  transform: translateY(20px);
+}
+.process-step.visible { animation: slideUp 0.5s forwards; }
+.process-step:hover { background: rgba(17,17,24,0.8); }
+.process-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 72px;
+  color: rgba(212,168,67,0.08);
+  line-height: 1;
+  position: absolute;
+  top: 16px; right: 16px;
+}
+.process-icon { font-size: 28px; margin-bottom: 16px; }
+.process-title {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+.process-desc { font-size: 13px; color: var(--grey); line-height: 1.6; }
+
+/* CTA SECTION */
+.cta-section {
+  text-align: center;
+  padding: 120px 40px;
+  position: relative;
+  overflow: hidden;
+}
+.cta-section::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(212,168,67,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.cta-section .section-title { font-size: clamp(48px,7vw,96px); }
+.cta-section p {
+  color: rgba(240,237,232,0.6);
+  font-size: 16px;
+  max-width: 480px;
+  margin: 20px auto 40px;
+  line-height: 1.7;
+}
+
+/* FOOTER */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.footer-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 3px;
+  color: var(--gold);
+}
+.footer-copy { font-size: 12px; color: var(--grey); }
+.footer-links { display: flex; gap: 20px; }
+.footer-links a {
+  color: var(--grey);
+  text-decoration: none;
+  font-size: 12px;
+  transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--gold); }
+
+/* ANIMATIONS */
+@keyframes slideUp {
+  from { opacity:0; transform:translateY(30px); }
+  to { opacity:1; transform:translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity:0; }
+  to { opacity:1; }
+}
+
+/* SCROLL REVEAL */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* HORIZONTAL SCROLL SKILLS */
+.skills-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 20px 0;
+  scrollbar-width: none;
+}
+.skills-scroll::-webkit-scrollbar { display: none; }
+.skill-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  padding: 10px 20px;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.skill-pill:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  transform: translateY(-3px);
+}
+
+/* COUNTER ANIMATION */
+.count-up { font-family: 'Bebas Neue', sans-serif; }
+
+/* MOBILE */
+@media(max-width:768px){
+  nav { padding: 16px 20px; }
+  .nav-links { display: none; }
+  .hero { grid-template-columns: 1fr; padding: 90px 20px 40px; }
+  .hero-3d { display: none; }
+  section { padding: 60px 20px; }
+  .hero-stats { gap: 24px; }
+  .process-steps { grid-template-columns: 1fr; }
+  footer { flex-direction: column; gap: 16px; text-align: center; }
+  .chatbot-section { padding: 60px 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">DEV.CM</div>
+  <ul class="nav-links">
+    <li><a href="#skills">Compétences</a></li>
+    <li><a href="#projects">Projets</a></li>
+    <li><a href="#demo">Démo IA</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Recruter</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-text">
+    <div class="hero-tag">DÉVELOPPEUR WEB & IA — YAOUNDÉ 🇨🇲</div>
+    <h1>
+      CODE.<br>
+      <span class="gold">AUTOMATE.</span><br>
+      <span class="outline">SCALE.</span>
+    </h1>
+    <p class="hero-sub">Étudiant en Génie Informatique spécialisé en développement web et intégration d'intelligence artificielle. Je transforme vos idées en solutions digitales qui fonctionnent.</p>
+    <div class="hero-buttons">
+      <a href="#demo" class="btn-primary">Voir la Démo IA</a>
+      <a href="#projects" class="btn-secondary">Mes Projets</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-num count-up" data-target="5">0</div>
+        <div class="stat-label">Langages maîtrisés</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num count-up" data-target="3">0</div>
+        <div class="stat-label">APIs IA intégrées</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num count-up" data-target="100">0</div>
+        <div class="stat-label">% Dédication</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-3d">
+    <canvas id="watch-canvas"></canvas>
+    <div class="badge-float">
+      <div class="badge-title">Stack</div>
+      <div class="badge-value">JS · Python · WP</div>
+    </div>
+    <div class="badge-float">
+      <div class="badge-title">Disponibilité</div>
+      <div class="badge-value">Immédiate ✓</div>
+    </div>
+  </div>
+</div>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span class="marquee-item">DÉVELOPPEUR WEB</span><span class="marquee-dot">✦</span>
+    <span class="marquee-item">INTÉGRATION IA</span><span class="marquee-dot">✦</span>
+    <span class="marquee-item">CHATBOT WHATSAPP</span><span class="marquee-dot">✦</span>
+    <span class="marquee-item">WORDPRESS</span><span class="marquee-dot">✦</span>
+    <span class="marquee-item">AUTOMATISATION</span><span class="marquee-dot">✦</span>
+    <span class="marquee-item">JAVASCRIPT</span><span class="marquee-dot">✦</span>
+    <span class="marquee-item">OPENAI API</span><span class="marquee-dot">✦</span>
+    <span class="marquee-item">DÉVELOPPEUR WEB</span><span class="marquee-dot">✦</span>
+    <span class="marquee-item">INTÉGRATION IA</span><span class="marquee-dot">✦</span>
+    <span class="marquee-item">CHATBOT WHATSAPP</span><span class="marquee-dot">✦</span>
+    <span class="marquee-item">WORDPRESS</span><span class="marquee-dot">✦</span>
+    <span class="marquee-item">AUTOMATISATION</span><span class="marquee-dot">✦</span>
+    <span class="marquee-item">JAVASCRIPT</span><span class="marquee-dot">✦</span>
+    <span class="marquee-item">OPENAI API</span><span class="marquee-dot">✦</span>
+  </div>
+</div>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="section-tag">Expertise</div>
+  <h2 class="section-title reveal">CE QUE JE<br><span class="gold">MAÎTRISE</span></h2>
+
+  <div class="skills-scroll">
+    <div class="skill-pill">⚡ JavaScript</div>
+    <div class="skill-pill">🐍 Python</div>
+    <div class="skill-pill">🌐 HTML / CSS</div>
+    <div class="skill-pill">☕ Java</div>
+    <div class="skill-pill">⚙️ C</div>
+    <div class="skill-pill">🤖 OpenAI API</div>
+    <div class="skill-pill">📱 WordPress</div>
+    <div class="skill-pill">🔗 REST APIs</div>
+    <div class="skill-pill">⚡ Make.com</div>
+    <div class="skill-pill">🛢️ MySQL</div>
+    <div class="skill-pill">📦 Git / GitHub</div>
+    <div class="skill-pill">💬 WhatsApp API</div>
+  </div>
+
+  <div class="skills-grid">
+    <div class="skill-card">
+      <span class="skill-icon">🤖</span>
+      <div class="skill-name">Intégration IA</div>
+      <div class="skill-desc">Je connecte OpenAI GPT-4 à vos applications pour créer des assistants intelligents, chatbots et outils d'automatisation basés sur l'IA.</div>
+      <div class="skill-tags">
+        <span class="skill-tag">OpenAI API</span>
+        <span class="skill-tag">GPT-4</span>
+        <span class="skill-tag">Langchain</span>
+      </div>
+    </div>
+    <div class="skill-card">
+      <span class="skill-icon">🌐</span>
+      <div class="skill-name">Développement Web</div>
+      <div class="skill-desc">Sites WordPress professionnels, landing pages de conversion, applications web sur mesure avec des interfaces modernes et responsives.</div>
+      <div class="skill-tags">
+        <span class="skill-tag">WordPress</span>
+        <span class="skill-tag">HTML/CSS/JS</span>
+        <span class="skill-tag">Elementor</span>
+      </div>
+    </div>
+    <div class="skill-card">
+      <span class="skill-icon">⚡</span>
+      <div class="skill-name">Automatisation</div>
+      <div class="skill-desc">Élimination des tâches répétitives via des scripts sur mesure et des workflows automatisés. Votre business tourne pendant que vous dormez.</div>
+      <div class="skill-tags">
+        <span class="skill-tag">Python</span>
+        <span class="skill-tag">Make.com</span>
+        <span class="skill-tag">Zapier</span>
+      </div>
+    </div>
+    <div class="skill-card">
+      <span class="skill-icon">💬</span>
+      <div class="skill-name">Chatbot WhatsApp</div>
+      <div class="skill-desc">Bots WhatsApp intelligents pour le service client automatisé, prise de commandes, réponses FAQ et qualification de prospects 24h/24.</div>
+      <div class="skill-tags">
+        <span class="skill-tag">Twilio</span>
+        <span class="skill-tag">WhatsApp API</span>
+        <span class="skill-tag">Node.js</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects" style="background:var(--bg2); max-width:100%; padding:100px 40px;">
+  <div style="max-width:1200px; margin:0 auto;">
+    <div class="section-tag">Portfolio</div>
+    <h2 class="section-title reveal">PROJETS<br><span class="gold">RÉALISÉS</span></h2>
+
+    <div class="projects-grid">
+      <div class="project-card p1">
+        <div class="project-thumb">
+          <div class="project-thumb-bg">⌚</div>
+        </div>
+        <div class="project-info">
+          <div class="project-name">Kmer Watches — Boutique IA</div>
+          <div class="project-desc">Chatbot IA pour boutique de montres en ligne. Service client automatisé 24h/24, prise de commandes WhatsApp, catalogue interactif.</div>
+          <div class="project-footer">
+            <div class="project-tech">
+              <span class="skill-tag">OpenAI</span>
+              <span class="skill-tag">JavaScript</span>
+              <span class="skill-tag">WhatsApp</span>
+            </div>
+            <a href="#demo" class="project-link">→</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="project-card p2">
+        <div class="project-thumb">
+          <div class="project-thumb-bg">🏢</div>
+        </div>
+        <div class="project-info">
+          <div class="project-name">PME Automation Suite</div>
+          <div class="project-desc">Suite d'automatisation pour PME locales : devis automatiques, rappels clients par SMS, rapports hebdomadaires générés par IA.</div>
+          <div class="project-footer">
+            <div class="project-tech">
+              <span class="skill-tag">Python</span>
+              <span class="skill-tag">Make.com</span>
+              <span class="skill-tag">Twilio</span>
+            </div>
+            <a href="#" class="project-link">→</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="project-card p3">
+        <div class="project-thumb">
+          <div class="project-thumb-bg">🏥</div>
+        </div>
+        <div class="project-info">
+          <div class="project-name">Clinique — Site WordPress Pro</div>
+          <div class="project-desc">Site professionnel pour clinique privée avec prise de rendez-vous en ligne, chatbot IA de triage, galerie médecins.</div>
+          <div class="project-footer">
+            <div class="project-tech">
+              <span class="skill-tag">WordPress</span>
+              <span class="skill-tag">Elementor</span>
+              <span class="skill-tag">AI Chat</span>
+            </div>
+            <a href="#" class="project-link">→</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="project-card p4">
+        <div class="project-thumb">
+          <div class="project-thumb-bg">📊</div>
+        </div>
+        <div class="project-info">
+          <div class="project-name">Dashboard Analytics IA</div>
+          <div class="project-desc">Tableau de bord intelligent qui analyse les ventes et génère des recommandations business automatiques via GPT-4.</div>
+          <div class="project-footer">
+            <div class="project-tech">
+              <span class="skill-tag">JavaScript</span>
+              <span class="skill-tag">GPT-4</span>
+              <span class="skill-tag">Chart.js</span>
+            </div>
+            <a href="#" class="project-link">→</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHATBOT DEMO -->
+<div class="chatbot-section" id="demo">
+  <div class="chatbot-inner">
+    <div class="chatbot-info">
+      <div class="section-tag">Démo Live</div>
+      <h2 class="section-title">CHATBOT <span class="gold">KMER<br>WATCHES</span></h2>
+      <p>Ce chatbot IA est un exemple concret de ce que je développe pour mes clients. Il simule le service client automatisé de Kmer Watches — disponible 24h/24, il répond aux questions, présente le catalogue et prend les commandes.</p>
+      <p>C'est ce type de solution que je construis pour les PME camerounaises qui veulent automatiser leur service client WhatsApp.</p>
+      <ul class="feature-list">
+        <li>Répond instantanément aux questions clients</li>
+        <li>Présente le catalogue de montres</li>
+        <li>Guide vers la commande WhatsApp</li>
+        <li>Disponible 24h/24, 7j/7</li>
+        <li>Intégrable sur tout site web</li>
+        <li>Personnalisable pour n'importe quel business</li>
+      </ul>
+      <div style="margin-top:32px;">
+        <a href="#contact" class="btn-primary">Commander ce Chatbot</a>
+      </div>
+    </div>
+
+    <div class="chat-widget">
+      <div class="chat-header">
+        <div class="chat-avatar">⌚</div>
+        <div class="chat-header-info">
+          <div class="chat-name">Kmer Watches Assistant</div>
+          <div class="chat-status">En ligne maintenant</div>
+        </div>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg msg-bot">
+          Bonjour ! 👋 Bienvenue chez <strong>Kmer Watches</strong> ⌚🇨🇲<br><br>
+          Je suis votre assistant virtuel. Je peux vous aider à :<br>
+          • Découvrir notre catalogue<br>
+          • Connaître les prix et disponibilités<br>
+          • Organiser votre livraison<br><br>
+          Comment puis-je vous aider aujourd'hui ?
+        </div>
+      </div>
+      <div class="quick-replies" id="quickReplies">
+        <button class="quick-btn" onclick="sendQuick('Voir le catalogue de montres')">📱 Voir le catalogue</button>
+        <button class="quick-btn" onclick="sendQuick('Quels sont les prix ?')">💰 Les prix</button>
+        <button class="quick-btn" onclick="sendQuick('Comment commander ?')">🛒 Commander</button>
+        <button class="quick-btn" onclick="sendQuick('Livraison à Yaoundé ?')">🚀 Livraison</button>
+      </div>
+      <div class="chat-input-wrap">
+        <input class="chat-input" id="chatInput" placeholder="Posez votre question..." onkeypress="handleEnter(event)">
+        <button class="chat-send" id="sendBtn" onclick="sendMessage()">➤</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROCESS -->
+<section>
+  <div class="section-tag">Comment ça marche</div>
+  <h2 class="section-title reveal">PROCESSUS<br><span class="gold">DE TRAVAIL</span></h2>
+  <div class="process-steps">
+    <div class="process-step">
+      <div class="process-num">01</div>
+      <div class="process-icon">💬</div>
+      <div class="process-title">Discussion</div>
+      <div class="process-desc">On discute de votre besoin en 15 min via WhatsApp ou message.</div>
+    </div>
+    <div class="process-step">
+      <div class="process-num">02</div>
+      <div class="process-icon">📋</div>
+      <div class="process-title">Proposition</div>
+      <div class="process-desc">Je vous envoie un devis clair avec délai et prix fixe.</div>
+    </div>
+    <div class="process-step">
+      <div class="process-num">03</div>
+      <div class="process-icon">⚙️</div>
+      <div class="process-title">Développement</div>
+      <div class="process-desc">Je développe votre solution avec des mises à jour régulières.</div>
+    </div>
+    <div class="process-step">
+      <div class="process-num">04</div>
+      <div class="process-icon">🚀</div>
+      <div class="process-title">Livraison</div>
+      <div class="process-desc">Livraison + formation + support post-lancement inclus.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact" style="max-width:100%;">
+  <div style="max-width:800px; margin:0 auto;">
+    <div class="section-tag" style="justify-content:center;">Contact</div>
+    <h2 class="section-title reveal">TRAVAILLONS<br><span class="gold">ENSEMBLE</span></h2>
+    <p>Basé à Yaoundé, je travaille avec des clients locaux et internationaux. Discutons de votre projet — première consultation gratuite.</p>
+    <div class="hero-buttons" style="justify-content:center;">
+      <a href="https://wa.me/237XXXXXXXXX" class="btn-primary" target="_blank">💬 WhatsApp</a>
+      <a href="https://fiverr.com" class="btn-secondary" target="_blank">⭐ Fiverr</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">DEV.CM 🇨🇲</div>
+  <div class="footer-copy">© 2025 — Développeur Web & IA · Yaoundé, Cameroun</div>
+  <div class="footer-links">
+    <a href="#">GitHub</a>
+    <a href="#">Fiverr</a>
+    <a href="#">Upwork</a>
+    <a href="#">LinkedIn</a>
+  </div>
+</footer>
+
+<script>
+// ===== CURSOR =====
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+document.addEventListener('mousemove', e => {
+  mouseX = e.clientX; mouseY = e.clientY;
+  cursor.style.left = mouseX + 'px';
+  cursor.style.top = mouseY + 'px';
+});
+function animateRing() {
+  ringX += (mouseX - ringX) * 0.15;
+  ringY += (mouseY - ringY) * 0.15;
+  ring.style.left = ringX + 'px';
+  ring.style.top = ringY + 'px';
+  requestAnimationFrame(animateRing);
+}
+animateRing();
+document.querySelectorAll('a, button, .skill-card, .project-card').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursor.style.width = '20px'; cursor.style.height = '20px';
+    ring.style.width = '60px'; ring.style.height = '60px';
+  });
+  el.addEventListener('mouseleave', () => {
+    cursor.style.width = '12px'; cursor.style.height = '12px';
+    ring.style.width = '40px'; ring.style.height = '40px';
+  });
+});
+
+// ===== THREE.JS 3D WATCH =====
+const canvas = document.getElementById('watch-canvas');
+if (canvas && window.THREE) {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
+  camera.position.z = 3;
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setSize(500, 500);
+  renderer.setPixelRatio(window.devicePixelRatio);
+
+  // Watch case
+  const caseGeo = new THREE.CylinderGeometry(1, 1, 0.3, 64);
+  const caseMat = new THREE.MeshPhysicalMaterial({
+    color: 0xC9A84C, metalness: 0.9, roughness: 0.1,
+    reflectivity: 1, clearcoat: 1
+  });
+  const watchCase = new THREE.Mesh(caseGeo, caseMat);
+  scene.add(watchCase);
+
+  // Dial
+  const dialGeo = new THREE.CylinderGeometry(0.92, 0.92, 0.05, 64);
+  const dialMat = new THREE.MeshPhysicalMaterial({
+    color: 0x0a1628, metalness: 0.3, roughness: 0.7
+  });
+  const dial = new THREE.Mesh(dialGeo, dialMat);
+  dial.position.y = 0.18;
+  scene.add(dial);
+
+  // Strap top
+  const strapTopGeo = new THREE.BoxGeometry(0.55, 1.2, 0.12);
+  const strapMat = new THREE.MeshStandardMaterial({ color: 0x1B3A6B, roughness: 0.8 });
+  const strapTop = new THREE.Mesh(strapTopGeo, strapMat);
+  strapTop.position.set(0, 1.3, 0);
+  scene.add(strapTop);
+
+  // Strap bottom
+  const strapBot = new THREE.Mesh(strapTopGeo, strapMat);
+  strapBot.position.set(0, -1.3, 0);
+  scene.add(strapBot);
+
+  // Hour markers
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    const markerGeo = new THREE.BoxGeometry(0.06, 0.18, 0.05);
+    const markerMat = new THREE.MeshStandardMaterial({ color: 0xC9A84C });
+    const marker = new THREE.Mesh(markerGeo, markerMat);
+    marker.position.set(Math.sin(angle) * 0.7, 0.21, Math.cos(angle) * 0.7);
+    scene.add(marker);
+  }
+
+  // Hands
+  const handGeo = new THREE.BoxGeometry(0.04, 0.55, 0.04);
+  const handMat = new THREE.MeshStandardMaterial({ color: 0xF0C060 });
+  const hourHand = new THREE.Mesh(handGeo, handMat);
+  hourHand.position.y = 0.22;
+  scene.add(hourHand);
+
+  const minHandGeo = new THREE.BoxGeometry(0.03, 0.72, 0.03);
+  const minHand = new THREE.Mesh(minHandGeo, handMat);
+  minHand.position.y = 0.22;
+  scene.add(minHand);
+
+  // Lights
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambientLight);
+  const mainLight = new THREE.PointLight(0xD4A843, 2, 10);
+  mainLight.position.set(3, 3, 3);
+  scene.add(mainLight);
+  const fillLight = new THREE.PointLight(0x0044ff, 0.5, 10);
+  fillLight.position.set(-3, -1, 2);
+  scene.add(fillLight);
+  const rimLight = new THREE.PointLight(0xffffff, 1, 10);
+  rimLight.position.set(0, 5, -2);
+  scene.add(rimLight);
+
+  // Particles
+  const partGeo = new THREE.BufferGeometry();
+  const count = 200;
+  const positions = new Float32Array(count * 3);
+  for (let i = 0; i < count * 3; i++) positions[i] = (Math.random() - 0.5) * 8;
+  partGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const partMat = new THREE.PointsMaterial({ color: 0xC9A84C, size: 0.03, transparent: true, opacity: 0.5 });
+  const particles = new THREE.Points(partGeo, partMat);
+  scene.add(particles);
+
+  let isDragging = false, prevX = 0, prevY = 0, rotX = 0, rotY = 0, velX = 0, velY = 0;
+  canvas.addEventListener('mousedown', e => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
+  window.addEventListener('mouseup', () => isDragging = false);
+  canvas.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    velX = (e.clientX - prevX) * 0.01;
+    velY = (e.clientY - prevY) * 0.01;
+    rotX += velY; rotY += velX;
+    prevX = e.clientX; prevY = e.clientY;
+  });
+  canvas.style.cursor = 'grab';
+  canvas.addEventListener('mousedown', () => { canvas.style.cursor = 'grabbing'; });
+  window.addEventListener('mouseup', () => { canvas.style.cursor = 'grab'; });
+
+  const clock = new THREE.Clock();
+  function animate3D() {
+    requestAnimationFrame(animate3D);
+    const t = clock.getElapsedTime();
+
+    if (!isDragging) {
+      velX *= 0.95; velY *= 0.95;
+      rotY += 0.005;
+    } else {
+      velX *= 0.9; velY *= 0.9;
+    }
+    rotX += velY * 0.5; rotY += velX * 0.5;
+
+    const group = [watchCase, dial, strapTop, strapBot, hourHand, minHand];
+    scene.children.forEach(c => {
+      if (c.isMesh) {
+        c.rotation.x = rotX;
+        c.rotation.y = rotY;
+      }
+    });
+
+    // Animate hands
+    hourHand.rotation.y = rotY;
+    hourHand.rotation.x = rotX;
+    hourHand.rotation.z = t * 0.1;
+    minHand.rotation.y = rotY;
+    minHand.rotation.x = rotX;
+    minHand.rotation.z = t * 0.6;
+
+    particles.rotation.y = t * 0.05;
+    mainLight.position.x = Math.sin(t * 0.5) * 4;
+    mainLight.position.z = Math.cos(t * 0.5) * 4;
+
+    renderer.render(scene, camera);
+  }
+  animate3D();
+}
+
+// ===== SCROLL REVEAL =====
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => entry.target.classList.add('visible'), i * 100);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.skill-card, .project-card, .process-step, .reveal').forEach(el => {
+  observer.observe(el);
+});
+
+// ===== COUNT UP =====
+const countObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const el = entry.target;
+      const target = parseInt(el.dataset.target);
+      let current = 0;
+      const step = target / 40;
+      const timer = setInterval(() => {
+        current += step;
+        if (current >= target) { current = target; clearInterval(timer); }
+        el.textContent = Math.floor(current) + (target === 100 ? '%' : '+');
+      }, 40);
+      countObserver.unobserve(el);
+    }
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('.count-up').forEach(el => countObserver.observe(el));
+
+// ===== CHATBOT =====
+const chatMessages = document.getElementById('chatMessages');
+const chatInput = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
+
+const systemPrompt = `Tu es l'assistant virtuel de Kmer Watches, une boutique de montres premium à Yaoundé, Cameroun. 
+Tu t'appelles "KW Assistant". Réponds TOUJOURS en français, de façon chaleureuse, concise et professionnelle.
+
+INFORMATIONS SUR LA BOUTIQUE:
+- Nom: Kmer Watches 🇨🇲
+- Spécialité: Montres premium (Naviforce, Casio, Poedagar, SKMEI, Curren)
+- Prix: De 8 000 FCFA à 80 000 FCFA
+- Livraison: Yaoundé en 24h, à domicile
+- Paiement: MTN Mobile Money, Orange Money
+- Commande: Via WhatsApp au +237 XXX XXX XXX
+- Garantie: Satisfait ou remboursé 7 jours
+- Emballage cadeau offert
+
+CATALOGUE PRINCIPAL:
+- Casio Classic Quartz (3 coloris: argent, or/noir, noir): 12 000 - 18 000 FCFA
+- Naviforce Chronographe Bleu/Or Rose: 35 000 FCFA
+- Poedagar Classique Noir: 28 000 FCFA  
+- Poedagar Octagon Bleu: 45 000 FCFA
+- Poedagar Romain: 22 000 FCFA
+- Poedagar Vert & Or: 38 000 FCFA
+- Poedagar Skeleton Noir: 32 000 FCFA
+- Poedagar Carré Acier: 25 000 FCFA
+- Poedagar Tachymètre Caramel: 35 000 FCFA
+
+Sois enthousiaste mais pas trop. Utilise des emojis avec modération. 
+Si quelqu'un veut commander, guide-les vers WhatsApp. 
+Réponds en 2-4 phrases maximum sauf si on te demande le catalogue complet.`;
+
+const chatHistory = [];
+
+async function callAPI(userMessage) {
+  chatHistory.push({ role: "user", content: userMessage });
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: chatHistory
+      })
+    });
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || "Désolé, une erreur s'est produite. Réessayez.";
+    chatHistory.push({ role: "assistant", content: reply });
+    return reply;
+  } catch (e) {
+    return "Bonjour ! Je suis actuellement hors ligne pour la démo. En vrai, je serais connecté à notre système. Contactez-nous directement sur WhatsApp 📲";
+  }
+}
+
+function addMessage(text, isUser) {
+  const div = document.createElement('div');
+  div.className = `msg ${isUser ? 'msg-user' : 'msg-bot'}`;
+  div.innerHTML = text;
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.className = 'typing-indicator';
+  div.id = 'typing';
+  div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+function removeTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
+
+async function sendMessage() {
+  const text = chatInput.value.trim();
+  if (!text) return;
+  chatInput.value = '';
+  sendBtn.disabled = true;
+  document.getElementById('quickReplies').style.display = 'none';
+  addMessage(text, true);
+  showTyping();
+  const reply = await callAPI(text);
+  removeTyping();
+  addMessage(reply, false);
+  sendBtn.disabled = false;
+  chatInput.focus();
+}
+
+function sendQuick(text) {
+  chatInput.value = text;
+  sendMessage();
+}
+
+function handleEnter(e) {
+  if (e.key === 'Enter') sendMessage();
+}
+</script>
+</body>
+</html>
